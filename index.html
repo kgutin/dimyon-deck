@@ -551,7 +551,7 @@
 
   /* Password gate. Light protection only (the check is in the page), enough to keep the link private-ish. */
   (function () {
-    const HASH = "8d1a6606c4b52703ebb303021024b883a82588c50e0b30aa2525fd996cf2c8bb", KEY = "dimyon-ok";
+    const HASH = "48554ecd1c10c45e65a515b4251af4f3d594813aea511fd77a2f6fcce5bca09b", KEY = "dimyon-ok";
     const gate = document.getElementById("gate"), pw = document.getElementById("gatePw"), msg = document.getElementById("gateMsg");
     const sha = async t => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, "0")).join("");
     let ok = false; try { ok = localStorage.getItem(KEY) === HASH; } catch (e) {}
