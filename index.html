@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>דימיון — הצעה ליעל ונעמי</title>
+<style>
+  @font-face { font-family: "Simpler Pro"; src: url("fonts/SimplerPro-Regular.otf") format("opentype"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Simpler Pro"; src: url("fonts/SimplerPro-Semibold.otf") format("opentype"); font-weight: 600; font-display: swap; }
+  @font-face { font-family: "Simpler Pro"; src: url("fonts/SimplerPro-Bold.otf") format("opentype"); font-weight: 700; font-display: swap; }
+
+  :root {
+    --bg: #f8f1f1;
+    --ink: #1e1e1e;
+    --grey: #a0a0a0;
+    --hot: #0022ff;
+    /* One design pixel. The Figma frames are 1512 x 982; everything is
+       laid out in those pixels and scaled to fit any window, so a slide
+       never scrolls. */
+    --u: min(calc(100vw / 1512), calc(100dvh / 982));
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  body { font-family: "Simpler Pro", "Heebo", "Arial Hebrew", sans-serif; color: var(--ink); }
+
+  /* The stage is the whole window. Wide blocks (the word wall, body text)
+     hang off the real window edges with the same 37px margin as Figma, so
+     they use the full width at any window shape; everything else is placed
+     around the window centre and scaled by --u. */
+  .stage { position: fixed; inset: 0; }
+  .slide { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+  .slide.on, .slide.leaving { visibility: visible; }
+  .slide.on { pointer-events: auto; }
+  .slide > * { position: absolute; margin: 0; line-height: 1; }
+  .slide img { display: block; max-width: none; }
+
+  /* ---------- Slide change: a clean "line mask" reveal ----------
+     Every line of text (and every image / shape) lives in its own clipped
+     box. The old slide slides down out of its boxes; the new one rises up
+     into them, line after line from the top. No fades, no blur. */
+  .slide {
+    --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .line { display: block; overflow: hidden; padding-block: .12em; margin-block: -.12em; text-align: right; }
+  .line-in, .m-in { display: block; translate: 0 112%; transition: translate .45s var(--ease-in); }
+  .m { overflow: hidden; }
+  .m-in { width: 100%; height: 100%; translate: 0 102%; }
+  .m-in { position: relative; }
+  .m-in > img, .m-in > .ph { display: block; width: 100%; height: 100%; }
+  .m-in > img.crop { position: absolute; }
+  .slide.on .line-in,
+  .slide.on .m-in {
+    translate: 0 0;
+    /* wait for the old slide to clear, then cascade by --n */
+    transition: translate 1.05s var(--ease-expo) calc(.3s + var(--n, 0) * 75ms);
+  }
+  /* Circles don't slide through a clip (that cuts them flat): they grow from the centre. */
+  .m.pop { overflow: visible; }
+  .m.pop .m-in, .slide.on .m.pop .m-in { translate: 0 0; transform-origin: 50% 50%; }
+  .m.pop .m-in { scale: 0; transition: scale .4s var(--ease-in); }
+  .slide.on .m.pop .m-in { scale: 1; transition: scale .95s var(--ease-expo) calc(.3s + var(--n, 0) * 75ms); }
+  @media (prefers-reduced-motion: reduce) {
+    .line-in, .m-in, .slide.on .line-in, .slide.on .m-in { translate: 0 0; transition: none; }
+    .m.pop .m-in, .slide.on .m.pop .m-in { scale: 1; transition: none; }
+  }
+
+  /* ---------- Previous / next (live at the window edges, like the frames) ---------- */
+  .nav {
+    position: fixed;
+    top: calc(45 * var(--u));
+    width: calc(130 * var(--u));
+    font: 700 calc(20 * var(--u)) / 1 "Simpler Pro", sans-serif;
+    color: var(--ink);
+    background: none; border: 0; padding: 0;
+    cursor: pointer;
+    z-index: 5;
+    white-space: pre;
+  }
+  .nav:hover, .nav:focus-visible { color: var(--hot); outline: none; }
+  .nav[hidden] { display: none; }
+  #next { left: calc(43 * var(--u)); text-align: left; }
+  #prev { right: calc(36 * var(--u)); text-align: right; }
+
+  /* ---------- Word wall (first slide) ---------- */
+  .wall { left: calc(37 * var(--u)); right: calc(37 * var(--u)); top: calc(50% + (92 - 491) * var(--u)); height: calc(855 * var(--u));
+          display: flex; flex-direction: column; justify-content: space-between;
+          font-size: calc(95 * var(--u)); color: var(--grey); }
+  .row { display: flex; justify-content: space-between; white-space: nowrap; }
+  .w { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: default; outline: none; }
+
+  /* Letter-by-letter highlight. Each letter owns a box as wide as its bold
+     form (--w, set in JS) so nothing reflows; regular and bold glyphs are
+     stacked and cross-faded, staggered by --i. */
+  .l { --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+       position: relative; display: inline-block; width: var(--w, auto);
+       text-align: center; white-space: pre; }
+  .l .a, .l .b { transition: opacity .3s var(--ease-out); }
+  .l .b { position: absolute; inset: 0; color: var(--hot); font-weight: 600; opacity: 0; }
+  .w:hover .l .a, .w:focus-visible .l .a { opacity: 0; }
+  .w:hover .l .b, .w:focus-visible .l .b { opacity: 1; }
+  .w:hover .l .a, .w:hover .l .b, .w:focus-visible .l .a, .w:focus-visible .l .b {
+    transition-delay: calc(var(--i) * var(--step, 20ms));
+  }
+
+  /* ---------- Content blocks ---------- */
+  .t { font-size: calc(var(--s) * var(--u)); color: var(--ink); text-align: right; }
+  .t.hot { color: var(--hot); text-align: justify; }
+  .t.left, .t.left .line { text-align: left; }
+  .t.tight { letter-spacing: -0.01em; }   /* -1% tracking, as in the frame */
+  .t p { margin: 0; line-height: 1; }
+  .ball { color: var(--bg); text-align: center; }
+  .ball .line, .ph-label .line { text-align: center; }
+  /* short captions inside the circles: even out the lines so none ends on a lone word */
+  .ball p { text-wrap: balance; }
+  .icn { position: relative; width: 100%; height: 100%; }
+  .icn.rot { position: absolute; }
+  .icn img { position: absolute; max-width: none; transition: opacity .15s ease; }
+  .icn .b { opacity: 0; }
+  .m.icon:hover .icn .b { opacity: 1; }
+  .m.icon:hover .icn .a { opacity: 0; }
+  .ph { background: #d9d9d9; }
+  .ph-label { text-align: center; color: #000; }
+
+  /* slide counter: top centre, on the same line as "next" / "previous" */
+  .dots { position: fixed; top: calc(45 * var(--u)); left: 50%; transform: translateX(-50%); z-index: 5;
+          font: 400 calc(20 * var(--u)) / 1 "Simpler Pro", sans-serif; color: var(--grey); letter-spacing: .05em; }
+
+
+  /* password gate */
+  .gate { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .gate[hidden] { display: none; }
+  .gate form { display: flex; flex-direction: column; gap: 16px; align-items: stretch; width: min(320px, 80vw); }
+  .gate input { font: 400 24px/1 "Simpler Pro", sans-serif; padding: 12px 14px; border: 0; border-bottom: 2px solid var(--ink); background: none; color: var(--ink); text-align: center; outline: none; direction: ltr; }
+  .gate input:focus { border-color: var(--hot); }
+  .gate button { font: 700 20px/1 "Simpler Pro", sans-serif; padding: 12px; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; }
+  .gate button:hover { background: var(--hot); }
+  .gate p { margin: 0; text-align: center; font: 400 20px/1 "Simpler Pro", sans-serif; color: var(--grey); min-height: 20px; }
+
+  @media (prefers-reduced-motion: reduce) { .l .a, .l .b { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage"></div>
+<button class="nav" id="prev" type="button" hidden dir="auto">&lt;   הקודם</button>
+<button class="nav" id="next" type="button" dir="auto">הבא   &gt;</button>
+<div class="dots" id="count" aria-hidden="true" dir="ltr"></div>
+
+<div class="gate" id="gate" hidden>
+  <form id="gateForm" autocomplete="off">
+    <input id="gatePw" type="password" placeholder="סיסמה" aria-label="סיסמה" autocomplete="off">
+    <button type="submit">כניסה</button>
+    <p id="gateMsg"></p>
+  </form>
+</div>
+
+
+<script>
+  /* ===========================================================
+     The deck. Numbers are Figma design pixels (frame = 1512 x 982).
+     To reorder or hide slides, edit this list. `hidden: true`
+     keeps a slide out of the deck (blank slides in Figma).
+     =========================================================== */
+  const BODY = "בשיחות בכיתה עלתה הרבה הפעולה של לדמיין צורות בעננים ופנים בחפצים, החלטנו לקחת השראה מהיכולת שלנו כבני אדם לקחת צורות מופשטות ולדמיין להן משמעות משלנו. הצורות של שאריות העץ יכתיבו לנו את העיצוב.";
+
+  const WORDS = [
+    ["מסכה", "יד", "גשר", "מדורה"],
+    ["פיגורטיביות הפשטה", "תקציב מוגבל"],
+    ["עיצוב למעצבים", "מהפך בכנס", "הזמנה"],
+    ["אינטראקטיביות", "7 דקות בגן עדן"],
+    ["צ׳יזבטים מסביב למדורה", "הצפנה"],
+    ["צורה שמתמלאת", "תלת לשוניות"],
+    ["השאלה מהחיים האמיתיים", "הצפנה"],
+    ["מערכת גנרטיבית", "קראפט", "סט במה"],
+    ["מעורבות סטודנטיאלית", "מרצים", "באזז"],
+  ];
+
+  // text block helpers: x, y, w in design px; s = font size
+  const text = (x, y, w, s, lines, cls = "") => ({ k: "text", x, y, w, s, lines: [].concat(lines), cls });
+  const img = (src, x, y, w, h, fit = "cover", crop = null) => ({ k: "img", src, x, y, w, h, fit, crop });
+  const ball = (src, x, y, w, h, tx, ty, tw, label) => ({ k: "ball", src, x, y, w, h, tx, ty, tw, label });
+  // hover icon: solid shape, swapped for its outline version under the pointer. sx/sy = outline size relative to solid (%)
+  const icon = (n, x, y, w, h, rot, sx, sy) => ({ k: "icon", n, x, y, w, h, rot, sx, sy });
+  const ph = (x, y, w, h, label, lw = w) => ({ k: "ph", x, y, w, h, label, lw });
+
+  const SLIDES = [
+    { name: "ענן מילים", items: [
+      { k: "wall" },
+    ]},
+    { name: "הצעה 01", items: [
+      text(37, 842, 1439, 35, ["הצעה 01", "מערכת המתבססת על ארבעה דימויים שנעשים בצורה ______ - יד, מסיכה, גשר, מדורה."]),
+    ]},
+    { name: "אייקונים", center: true, items: [
+      icon(1, 565, 384, 334, 100, 0, 101.58, 105.04),
+      icon(4, 338, 319, 193, 229, 0, 102.75, 102.31),
+      icon(8, 670, 573, 216, 150, 0, 102.96, 104.08),
+      icon(11, 933, 337, 221, 184, 0, 102.29, 102.86),
+      icon(16, 898, 575, 242, 146, 1, 103.34, 101.92),
+      icon(26, 352, 587, 306, 122, 0, 102.17, 105.15),
+      icon(18, 656, 109, 200, 197, 0, 102.94, 102.85),
+      icon(24, 923, 122, 192, 172, 0, 102.69, 102.85),
+      icon(29, 392, 145, 221, 125, 0, 102.23, 103.75),
+      text(89, 842, 1387, 35, "השפה תתבסס על מספר ״אייקונים״ שנוצרו בשלב הסקיצות אך גם תשלב צורות חדשות ואת התמה של כל אחת מהן."),
+    ]},
+
+    { name: "תא צילום", items: [
+      ph(320, 137, 922.514, 616.96, "פוטובות׳"),
+      text(89, 842, 1387, 35, "טקסט על תא צילום"),
+    ]},
+    { name: "מסכות", items: [
+      ph(320, 137, 922.514, 616.96, "מסכות"),
+      text(89, 842, 1387, 35, "טקסט על מסכות"),
+    ]},
+    { name: "הזמנה לכנס", items: [
+      ph(534, 137, 495, 616.96, "הזמנה לכנס", 96),
+      text(89, 842, 1387, 35, "הזמנה לכנס"),
+    ]},
+    { name: "עיצוב מסך", items: [
+      ph(245, 137, 1073, 616.96, "עיצוב מסך"),
+      text(89, 842, 1387, 35, "עיצוב מסך"),
+    ]},
+    { name: "הצעה 02", items: [
+      text(37, 842, 1439, 35, ["הצעה 02", "מערכת המתבססת על הרעיון התמתי של מסיכה. יצירה של מערכת מסכות בצורה שמשלבת קראפט ומערכת גנרטיבית."]),
+    ]},
+    { name: "מערכת מסכות", items: [
+      ph(320, 137, 922.514, 616.96, "מערכת מסכות"),
+      text(89, 842, 1387, 35, "טקסט על מערכת מסכות"),
+    ]},
+    { name: "תא צילום", items: [
+      ph(320, 137, 922.514, 616.96, "פוטובות׳"),
+      text(89, 842, 1387, 35, "טקסט על תא צילום"),
+    ]},
+    { name: "מסכות", items: [
+      ph(320, 137, 922.514, 616.96, "מסכות"),
+      text(89, 842, 1387, 35, "טקסט על מסכות"),
+    ]},
+    { name: "הזמנה לכנס", items: [
+      ph(534, 137, 495, 616.96, "הזמנה לכנס", 96),
+      text(89, 842, 1387, 35, "הזמנה לכנס"),
+    ]},
+    { name: "עיצוב מסך", items: [
+      ph(245, 137, 1073, 616.96, "עיצוב מסך"),
+      text(89, 842, 1387, 35, "עיצוב מסך"),
+    ]},
+    { name: "תהיות", items: [
+      text(37, 662, 1439, 95, ["1) נוכחות גבוהה של סטודנטים.ות בכנס", "2) עבודה עם תקציב מוגבל", "3) נוכחות אמנים ויוצרים מחוץ לבצלאל"], "hot tight"),
+    ]},
+    { name: "מה גורם", items: [
+      text(37, 852, 1439, 95, "מה גורם לסטודנטים.ות להגיע לאירוע?", "hot"),
+    ]},
+    { name: "מה גורם לנו לבוא", items: [
+      ball("assets/ellipse-d.svg", 915.2, 492.08, 339.924, 339.924, 978, 609, 214, "מרצ׳ ודפוס, משהו שבא איתי הביתה"),
+      ball("assets/ellipse-b.svg", 587.03, 492.08, 339.924, 339.924, 647, 627, 220, "חברים.ות מציגים באירוע"),
+      ball("assets/ellipse-a.svg", 257.57, 490.9, 341.217, 339.924, 331, 609, 194, "ערך מוסף, תוכן שמושך אותי"),
+      ball("assets/ellipse-b.svg", 1078.79, 197, 339.924, 339.924, 1151, 332, 195, "המלצות ממרצים"),
+      ball("assets/ellipse-b.svg", 750.62, 197, 339.924, 339.924, 821, 331, 199.85, "פרסום ברשתות"),
+      ball("assets/ellipse-b.svg", 422.45, 197, 339.924, 339.924, 495, 322, 195, "מערכת מיתוג שמושכת אותי"),
+      ball("assets/ellipse-c.svg", 92.99, 197, 341.217, 338.632, 152, 322, 224, "משהו שידברו עליו (פורמט wild)"),
+    ]},
+
+    { name: "רפרנסים — מרצ׳ ודפוס", items: [
+      text(916, 852, 560, 95, "מרצ׳/דפוס"),
+      text(43, 852, 600, 95, "רפרנסים", "left"),
+      img("assets/ref-m-19-c.jpg", 43, 119, 194, 291, "fill"),
+      img("assets/ref-m-20-c.jpg", 300, 119, 231, 292, "fill"),
+      img("assets/ref-m-21-c.jpg", 594, 119, 218, 291, "fill"),
+      img("assets/ref-m-34-c.jpg", 43, 466, 242, 324, "fill"),
+      img("assets/ref-m-37-c.jpg", 339, 466, 182, 324, "fill"),
+      img("assets/ref-m-38-c.jpg", 575, 466, 243, 323, "fill"),
+      img("assets/ref-m-39-c.jpg", 875, 119, 332, 295, "fill"),
+      img("assets/ref-m-42-c.jpg", 1270, 116, 196, 294, "fill"),
+      img("assets/ref-m-44-c.jpg", 1250, 466, 215, 324, "fill"),
+      img("assets/ref-m-41-c.jpg", 872, 466, 324, 324, "fill"),
+    ]},
+    { name: "שת״פ עם סטודנטים", items: [
+      text(576, 852, 900, 95, "שת״פ עם סטודנטים"),
+      text(43, 852, 600, 95, "הצעה", "left"),
+    ]},
+    { name: "בזק", items: [
+      img("assets/fmt-40-c.jpg", 37, 226, 294, 442, "fill"),
+      img("assets/fmt-46-c.jpg", 384, 226, 344, 442, "fill"),
+      img("assets/fmt-47-c.jpg", 781, 226, 310, 442, "fill"),
+      img("assets/fmt-48-c.jpg", 1144, 226, 332, 442, "fill"),
+      text(37, 842, 1439, 35, "אחד הדברים שגורמים לנו להגיע לאירועים הוא כמובן פרגון לחברים.ות שמציגים בתערוכה. בנוסף הקול והנוכחות של סטודנטים.ות חשוב בכנס מסוג זה. אפשר לשלב את שני הרעיונות האלה בפרויקט מיוחד בו נאסוף שלושה-ארבעה סטודנטים.ות שיצרו פורמט ״בזק״ בנושא דמיון ויציגו בכנס בעמדה סטטית."),
+    ]},
+    { name: "עבודה עם תקציב מוגבל", items: [
+      text(37, 852, 1439, 95, "עבודה עם תקציב מוגבל", "hot"),
+    ]},
+    { name: "סט תיאטרון", items: [
+      text(37, 662, 1439, 95, "מערכת שבנויה על הרעיון של סט תיאטרון ועושה שימוש בשאריות עץ מהסדנאות של בצלאל"),
+    ]},
+    { name: "צורות בעננים", items: [
+      img("assets/cloud-rabbit-c.jpg", 397, 173, 718, 479, "fill"),
+      text(37, 842, 1439, 35, BODY),
+    ]},
+    { name: "שאריות עץ", items: [
+      img("assets/wood-offcut.png", 790, 283, 621, 355, "contain"),
+      img("assets/wood-offcut.png", 118, 283, 621, 355, "contain"),
+      text(37, 842, 1439, 35, BODY),
+    ]},
+    { name: "לוגו בתנועה", items: [
+      img("assets/wood-motion-c.jpg", 772, 113, 301, 684, "fill"),
+      img("assets/wood-motion-c.jpg", 439, 113, 301, 684, "fill"),
+      text(37, 842, 1439, 35, BODY),
+    ]},
+    { name: "רפרנסים — פורמטי חלל", items: [
+      text(727, 852, 749, 95, "פורמטי חלל"),
+      text(43, 852, 600, 95, "רפרנסים", "left"),
+      img("assets/ref-s-5-c.jpg", 43, 119, 261, 309, "fill"),
+      img("assets/ref-s-7-c.jpg", 333, 119, 261, 309, "fill"),
+      img("assets/ref-s-9-c.jpg", 654, 478, 173, 318, "fill"),
+      img("assets/ref-s-26-c.jpg", 43, 478, 220, 319, "fill"),
+      img("assets/ref-s-50-c.jpg", 909, 119, 365, 308, "fill"),
+      img("assets/ref-s-51-c.jpg", 863, 478, 365, 318, "fill"),
+      img("assets/ref-s-53-c.jpg", 1303, 119, 174, 309, "fill"),
+      img("assets/ref-s-54-c.jpg", 1264, 478, 212, 318, "fill"),
+      img("assets/ref-s-49-c.jpg", 299, 478, 320, 319, "fill"),
+      img("assets/ref-s-55-c.jpg", 623, 117, 257, 310, "fill"),
+    ]},
+    { name: "מהפך בכנס", items: [
+      text(916, 852, 560, 95, "מהפך בכנס"),
+      text(43, 852, 600, 95, "הצעה", "left"),
+    ]},
+    { name: "מהלך שינוי", items: [
+      text(37, 897, 1439, 35, "מהלך של שינוי העיצוב או האווירה הכללית של הכנס - המהלך יראה אחרת לפי הכיוון שיבחר."),
+    ]},
+    { name: "מהלך שינוי 01", items: [
+      text(37, 897, 1439, 35, "מהלך שינוי 01"),
+    ]},
+    { name: "מהלך שינוי 02", items: [
+      text(37, 897, 1439, 35, "מהלך שינוי 02"),
+    ]},
+  ].filter(s => !s.hidden);
+
+  /* ---------------- rendering ---------------- */
+  const px = n => `calc(${n} * var(--u))`;
+  const stage = document.getElementById("stage");
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const countEl = document.getElementById("count");
+
+  // Figma x/y -> window coordinates. Wide blocks stretch between the window
+  // edges (same side margins as the frame); the rest is centred and scaled.
+  const cx = x => `calc(50% + (${x} - 756) * var(--u))`;
+  const cy = y => `calc(50% + (${y} - 491) * var(--u))`;
+  // Free-standing items (images, circles, short titles) are spread between the same
+  // outer margins as the text and the nav: the outermost items sit flush at the
+  // slide's design margins, the rest keep their relative spot. At the design
+  // aspect ratio this is exactly the Figma layout.
+  let GX = null;   // { minL, maxR } of the slide being built
+  const spread = (x, w) => {
+    if (!GX) return null;
+    const room = GX.maxR - GX.minL - w;
+    if (room <= 0.5) return null;
+    return `(${GX.minL} * var(--u) + ${(x - GX.minL) / room} * (100% - ${(1512 - GX.maxR) + GX.minL + w} * var(--u)))`;
+  };
+  const leftExpr = (x, w) => spread(x, w) || `(50% + (${x} - 756) * var(--u))`;
+  function place(el, x, y, w, h) {
+    el.style.top = cy(y);
+    if (w != null && w >= 1300) {
+      el.style.left = px(x);
+      el.style.right = px(1512 - x - w);
+    } else {
+      el.style.left = "calc" + leftExpr(x, w || 0);
+      if (w != null) el.style.width = px(w);
+    }
+    if (h != null) el.style.height = px(h);
+  }
+  // caption / label centred on a box that was placed with place()
+  function placeCentred(el, box, y, cw) {
+    el.style.top = cy(y);
+    el.style.left = `calc(${leftExpr(box.x, box.w)} + ${(box.w - cw) / 2} * var(--u))`;
+    el.style.width = px(cw);
+  }
+
+  function buildWall() {
+    const wall = document.createElement("div");
+    wall.className = "wall";
+    wall.setAttribute("role", "list");
+    for (const row of WORDS) {
+      const r = document.createElement("div");
+      r.className = "row";
+      for (const word of row) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "w"; b.tabIndex = -1;
+        b.setAttribute("aria-label", word);
+        const chars = Array.from(word);
+        // whole sweep takes about the same time for any word
+        b.style.setProperty("--step", Math.min(45, 320 / chars.length).toFixed(1) + "ms");
+        chars.forEach((ch, i) => {
+          const s = document.createElement("span");
+          s.className = "l"; s.dataset.ch = ch; s.setAttribute("aria-hidden", "true");
+          s.style.setProperty("--i", i);
+          const a = document.createElement("span"); a.className = "a"; a.textContent = ch;
+          const bold = document.createElement("span"); bold.className = "b"; bold.textContent = ch;
+          s.append(a, bold); b.appendChild(s);
+        });
+        r.appendChild(b);
+      }
+      // each row is its own clipped line, so the wall rises row by row
+      const line = document.createElement("div"); line.className = "line";
+      const inn = document.createElement("div"); inn.className = "line-in";
+      inn.appendChild(r); line.appendChild(inn);
+      wall.appendChild(line);
+    }
+    return wall;
+  }
+
+  // A clipped box whose content slides up into view (images, shapes).
+  function mask(child, x, y, w, h) {
+    const m = document.createElement("div"); m.className = "m"; place(m, x, y, w, h);
+    const inn = document.createElement("div"); inn.className = "m-in";
+    inn.appendChild(child); m.appendChild(inn);
+    return m;
+  }
+  // Text block: paragraphs are split into masked lines later (see relayout).
+  function textBlock(cls, size, lines) {
+    const d = document.createElement("div");
+    d.className = "t " + cls; d.style.setProperty("--s", size);
+    for (const l of lines) { const p = document.createElement("p"); p.dataset.text = l; p.textContent = l; d.appendChild(p); }
+    return d;
+  }
+
+  let ballSeq = 0;
+  function buildItem(it) {
+    if (it.k === "wall") return buildWall();
+    if (it.k === "text") {
+      const d = textBlock(it.cls, it.s, it.lines);
+      place(d, it.x, it.y, it.w);
+      return d;
+    }
+    if (it.k === "img") {
+      const i = document.createElement("img");
+      i.src = it.src; i.alt = ""; i.style.objectFit = it.fit;
+      if (it.crop) {   // [width%, height%, left%, top%] of the box, as cropped in Figma
+        i.classList.add("crop");
+        Object.assign(i.style, { width: it.crop[0] + "%", height: it.crop[1] + "%", left: it.crop[2] + "%", top: it.crop[3] + "%" });
+      }
+      return mask(i, it.x, it.y, it.w, it.h);
+    }
+    if (it.k === "ball") {
+      const frag = document.createDocumentFragment();
+      const i = document.createElement("img");
+      i.src = it.src; i.alt = "";
+      const t = textBlock("ball", 35, [it.label]);
+      // A slightly wider caption box so captions don't end on a lone word, centred
+      // exactly on its circle (both ways), however many lines the text takes.
+      const CAP = 250;
+      placeCentred(t, it, it.y + it.h / 2, CAP);
+      t.style.translate = "0 -50%";
+      const m = mask(i, it.x, it.y, it.w, it.h);
+      m.classList.add("pop");
+      m.dataset.ball = t.dataset.ball = ballSeq++;   // links a circle to its caption
+      frag.append(m, t);
+      return frag;
+    }
+    if (it.k === "icon") {
+      const box = document.createElement("div"); box.className = "icn";
+      const mk = (src, cls, sx, sy) => {
+        const i = document.createElement("img"); i.src = src; i.alt = ""; i.className = cls;
+        Object.assign(i.style, { width: sx + "%", height: sy + "%", left: (100 - sx) / 2 + "%", top: (100 - sy) / 2 + "%" });
+        return i;
+      };
+      box.append(mk(`assets/icon-${it.n}.png`, "a", 100, 100), mk(`assets/icon-${it.n}-i.png`, "b", it.sx, it.sy));
+      if (it.rot) {   // this one is turned 90deg in the frame
+        box.style.cssText = `left:50%;top:50%;width:${px(it.h)};height:${px(it.w)};transform:translate(-50%,-50%) rotate(-90deg) scaleY(-1)`;
+        box.classList.add("rot");
+      }
+      const m = mask(box, it.x, it.y, it.w, it.h); m.classList.add("icon", "pop");
+      return m;
+    }
+    if (it.k === "ph") {
+      const frag = document.createDocumentFragment();
+      const r = document.createElement("div"); r.className = "ph";
+      const t = textBlock("ph-label", 35, [it.label]);
+      // label centred in its box, both ways
+      placeCentred(t, it, it.y + it.h / 2, it.lw);
+      t.style.translate = "0 -50%";
+      frag.append(mask(r, it.x, it.y, it.w, it.h), t);
+      return frag;
+    }
+  }
+
+  const slideEls = SLIDES.map(s => {
+    const el = document.createElement("section");
+    el.className = "slide"; el.setAttribute("aria-label", s.name);
+    const free = s.center ? [] : s.items.filter(it => it.k !== "wall" && it.w != null && it.w < 1300);
+    GX = free.length > 1 ? { minL: Math.min(...free.map(i => i.x)), maxR: Math.max(...free.map(i => i.x + i.w)) } : null;
+    for (const it of s.items) el.appendChild(buildItem(it));
+    GX = null;
+    stage.appendChild(el);
+    return el;
+  });
+
+  /* ---------------- masked lines ---------------- */
+  // Break a paragraph into its visual lines (measured, so it follows the
+  // window width) and put each line in its own clipped box.
+  function splitParagraph(p) {
+    p.textContent = "";
+    const words = p.dataset.text.split(" ");
+    const spans = words.map(w => { const s = document.createElement("span"); s.textContent = w; return s; });
+    spans.forEach((s, i) => { p.append(s); if (i < spans.length - 1) p.append(" "); });
+    const groups = []; let lastTop = null;
+    for (const s of spans) {
+      const t = s.offsetTop;
+      if (lastTop === null || Math.abs(t - lastTop) > 2) { groups.push([]); lastTop = t; }
+      groups[groups.length - 1].push(s.textContent);
+    }
+    // No orphans: if the last line is a single word, pull the previous
+    // line's last word down so it ends with at least two words.
+    if (groups.length > 1) {
+      const last = groups[groups.length - 1], prev = groups[groups.length - 2];
+      if (last.length === 1 && prev.length > 2) last.unshift(prev.pop());
+    }
+    p.textContent = "";
+    for (const g of groups) {
+      const line = document.createElement("span"); line.className = "line";
+      const inn = document.createElement("span"); inn.className = "line-in"; inn.textContent = g.join(" ");
+      line.appendChild(inn); p.appendChild(line);
+    }
+  }
+  // Cascade order inside each slide: top to bottom, right to left.
+  function numberSlides() {
+    for (const el of slideEls) {
+      const nodes = [...el.querySelectorAll(".line, .m")];
+      const pos = new Map(nodes.map(n => [n, n.getBoundingClientRect()]));
+      nodes.sort((a, b) => (Math.round(pos.get(a).top / 12) - Math.round(pos.get(b).top / 12)) || (pos.get(b).left - pos.get(a).left));
+      nodes.forEach((n, i) => n.style.setProperty("--n", Math.min(i, 10)));
+
+      // Circles: grow one by one (top row right to left, then the bottom row),
+      // each caption rising right after its own circle.
+      const pops = [...el.querySelectorAll(".m.pop")];
+      const pr = new Map(pops.map(n => [n, n.getBoundingClientRect()]));
+      pops.sort((a, b) => (Math.round(pr.get(a).top / 40) - Math.round(pr.get(b).top / 40)) || (pr.get(b).left - pr.get(a).left));
+      pops.forEach((m, k) => {
+        m.style.setProperty("--n", k * 1.5);
+        const cap = el.querySelector(`.t[data-ball="${m.dataset.ball}"]`);
+        if (cap) cap.querySelectorAll(".line").forEach((ln, i) => ln.style.setProperty("--n", k * 1.5 + 1.3 + i * 0.5));
+      });
+    }
+  }
+  function relayout() {
+    document.querySelectorAll(".t p").forEach(splitParagraph);
+    numberSlides();
+  }
+  let resizeTimer;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(relayout, 150); });
+
+
+  /* Password gate. Light protection only (the check is in the page), enough to keep the link private-ish. */
+  (function () {
+    const HASH = "8d1a6606c4b52703ebb303021024b883a82588c50e0b30aa2525fd996cf2c8bb", KEY = "dimyon-ok";
+    const gate = document.getElementById("gate"), pw = document.getElementById("gatePw"), msg = document.getElementById("gateMsg");
+    const sha = async t => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, "0")).join("");
+    let ok = false; try { ok = localStorage.getItem(KEY) === HASH; } catch (e) {}
+    if (ok) return;
+    window.__locked = true; gate.hidden = false; pw.focus();
+    document.getElementById("gateForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (await sha(pw.value.trim()) === HASH) {
+        try { localStorage.setItem(KEY, HASH); } catch (err) {}
+        window.__locked = false; gate.hidden = true;
+      } else { msg.textContent = "סיסמה שגויה"; pw.select(); }
+    });
+  })();
+
+  /* ---------------- navigation ---------------- */
+  let cur = -1;
+  function go(n) {
+    n = Math.max(0, Math.min(SLIDES.length - 1, n));
+    if (n === cur) return;
+    if (cur >= 0) {
+      const old = slideEls[cur];
+      old.classList.remove("on");
+      old.classList.add("leaving");           // keeps it visible while it drops away
+      setTimeout(() => old.classList.remove("leaving"), 450);
+    }
+    cur = n;
+    slideEls[cur].classList.add("on");
+    prevBtn.hidden = cur === 0;                 // no "previous" on the first slide
+    nextBtn.hidden = cur === SLIDES.length - 1; // no "next" on the last one
+    countEl.textContent = (cur + 1) + " / " + SLIDES.length;
+    if (location.hash !== "#" + (cur + 1)) history.replaceState(null, "", "#" + (cur + 1));
+  }
+  const fromHash = () => { const n = parseInt(location.hash.slice(1), 10); return Number.isFinite(n) ? n - 1 : 0; };
+
+  prevBtn.addEventListener("click", () => go(cur - 1));
+  nextBtn.addEventListener("click", () => go(cur + 1));
+  window.addEventListener("hashchange", () => go(fromHash()));
+  document.addEventListener("keydown", e => {
+    if (window.__locked) return;
+    // The deck is right-to-left: "next" sits on the left, like in Figma.
+    if (e.key === "ArrowLeft" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(cur + 1); }
+    if (e.key === "ArrowRight" || e.key === "PageUp") { e.preventDefault(); go(cur - 1); }
+    // R = start over. Matched by physical key so it also works on a Hebrew keyboard (ר),
+    // and ignored with Cmd/Ctrl/Alt so browser reload (Cmd+R) still works.
+    if (e.code === "KeyR" && !e.metaKey && !e.ctrlKey && !e.altKey) go(0);
+    if (e.key === "Home") go(0);
+    if (e.key === "End") go(SLIDES.length - 1);
+  });
+
+  /* Give every wall letter the width of its widest weight (in em) so bold never reflows. */
+  document.fonts.load('400 100px "Simpler Pro"').then(() => document.fonts.load('600 100px "Simpler Pro"')).then(() => {
+    const ctx = document.createElement("canvas").getContext("2d");
+    const cache = {};
+    const widthOf = ch => cache[ch] ??= (() => {
+      ctx.font = '400 100px "Simpler Pro"'; const r = ctx.measureText(ch).width;
+      ctx.font = '600 100px "Simpler Pro"'; return Math.max(r, ctx.measureText(ch).width) / 100;
+    })();
+    document.querySelectorAll(".l").forEach(l => l.style.setProperty("--w", widthOf(l.dataset.ch) + "em"));
+  });
+
+  // Wait for the fonts so lines are measured with the real typeface, then show the first slide.
+  Promise.all(['400 100px "Simpler Pro"', '600 100px "Simpler Pro"', '700 25px "Simpler Pro"'].map(f => document.fonts.load(f)))
+    .catch(() => {})
+    .then(() => { relayout(); go(fromHash()); });
+
+  // Decode every image up front, so a picture is never still loading when its slide rises.
+  document.querySelectorAll(".slide img").forEach(i => { i.decoding = "async"; i.loading = "eager"; i.decode?.().catch(() => {}); });
+</script>
+</body>
+</html>
