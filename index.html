@@ -183,15 +183,27 @@
   const ball = (src, x, y, w, h, tx, ty, tw, label) => ({ k: "ball", src, x, y, w, h, tx, ty, tw, label });
   // hover icon: solid shape, swapped for its outline version under the pointer. sx/sy = outline size relative to solid (%)
   const icon = (n, x, y, w, h, rot, sx, sy) => ({ k: "icon", n, x, y, w, h, rot, sx, sy });
+  const im = (f, x, y, w, h) => img("assets/" + f, x, y, w, h, "fill");
+  const vid = (src, x, y, w, h) => ({ k: "vid", src, x, y, w, h });
+  const rimg = (src, x, y, w, h) => ({ k: "rimg", src, x, y, w, h });
   const ph = (x, y, w, h, label, lw = w) => ({ k: "ph", x, y, w, h, label, lw });
 
   const SLIDES = [
     { name: "ענן מילים", items: [
       { k: "wall" },
     ]},
-    { name: "הצעה 01", items: [
-      text(37, 842, 1439, 35, ["הצעה 01", "מערכת המתבססת על ארבעה דימויים שנעשים בצורה ______ - יד, מסיכה, גשר, מדורה."]),
+    { name: "מתחילים", items: [
+      im("s02a.jpg", 264, 568, 985, 291),
+      im("s02b.jpg", 64, 168, 627, 387),
+      im("s02c.jpg", 597, 136, 895, 451),
     ]},
+
+    { name: "הצעה 01", items: [
+      text(37, 842, 1439, 35, ["הצעה 01", "מערכת המתבססת על אייקונים."]),
+      im("s03a.jpg", 68, 210, 671, 491),
+      im("s03b.jpg", 707, 228, 738, 455),
+    ]},
+
     { name: "אייקונים", center: true, items: [
       icon(1, 565, 384, 334, 100, 0, 101.58, 105.04),
       icon(4, 338, 319, 193, 229, 0, 102.75, 102.31),
@@ -205,47 +217,147 @@
       text(89, 842, 1387, 35, "השפה תתבסס על מספר ״אייקונים״ שנוצרו בשלב הסקיצות אך גם תשלב צורות חדשות ואת התמה של כל אחת מהן."),
     ]},
 
-    { name: "תא צילום", items: [
-      ph(320, 137, 922.514, 616.96, "פוטובות׳"),
-      text(89, 842, 1387, 35, "טקסט על תא צילום"),
+    { name: "וידאו 05", items: [
+      vid("assets/video-05.mp4", 278, 180, 956, 621),
     ]},
-    { name: "מסכות", items: [
-      ph(320, 137, 922.514, 616.96, "מסכות"),
-      text(89, 842, 1387, 35, "טקסט על מסכות"),
+
+    { name: "06", items: [
+      im("s06a.jpg", 324.5, 329, 840, 257),
+      im("s06b.jpg", 919, 160, 441, 298),
+      im("s06c.jpg", 152, 482.5, 528, 339),
     ]},
-    { name: "הזמנה לכנס", items: [
-      ph(534, 137, 495, 616.96, "הזמנה לכנס", 96),
-      text(89, 842, 1387, 35, "הזמנה לכנס"),
+
+    { name: "07", items: [
+      im("s07a.jpg", 462.5, 436, 840, 257),
+      im("s07b.jpg", 210, 416, 441, 298),
+      im("s07c.jpg", 416, 226, 528, 339),
     ]},
-    { name: "עיצוב מסך", items: [
-      ph(245, 137, 1073, 616.96, "עיצוב מסך"),
-      text(89, 842, 1387, 35, "עיצוב מסך"),
+
+    { name: "08", items: [
+      im("s08a.jpg", 348.5, 447, 840, 257),
+      im("s08b.jpg", 937, 278, 441, 298),
+      im("s08c.jpg", 133, 277, 528, 339),
     ]},
+
+    { name: "09", items: [
+      im("s09a.jpg", 94, 197, 422, 527),
+      im("s09b.jpg", 996, 197, 422, 527),
+      im("s09c.jpg", 544, 197, 422, 527),
+    ]},
+
+    { name: "10", items: [
+      im("s10a.jpg", 292, 108, 296, 370),
+      im("s10b.jpg", 925, 108, 296, 370),
+      im("s10c.jpg", 608, 108, 296, 370),
+      im("s10d.jpg", 608, 503, 296, 370),
+      im("s10e.jpg", 292, 503, 296, 370),
+      im("s10f.jpg", 925, 503, 296, 370),
+    ]},
+
+    { name: "11", items: [
+      im("s11a.jpg", 292, 108, 297, 372),
+      im("s11b.jpg", 608, 502, 297, 371),
+      im("s11c.jpg", 924, 502, 297, 371),
+      im("s11d.jpg", 292, 502, 297, 372),
+      im("s11e.jpg", 608, 108, 297, 372),
+      im("s11f.jpg", 924, 109, 297, 371),
+    ]},
+
+    { name: "12", items: [
+      vid("assets/video-12.mp4", 166, 159, 1180, 664),
+    ]},
+
+    { name: "13", items: [
+      vid("assets/video-13.mp4", 166, 159, 1180, 664),
+    ]},
+
+    { name: "14", items: [
+      vid("assets/video-13.mp4", 166, 159, 1180, 664),
+    ]},
+
+    { name: "15", items: [
+      im("s15.jpg", 423, 131, 666, 720),
+    ]},
+
+    { name: "16", items: [
+      im("s16.jpg", 510, 137, 492, 617),
+    ]},
+
+    { name: "17", items: [
+      im("s17a.jpg", 210, 162, 526, 657),
+      im("s17b.jpg", 776, 162, 526, 657),
+    ]},
+
+    { name: "18", items: [
+      im("s18.jpg", 142, 140, 1227, 690),
+    ]},
+
+    { name: "19", items: [
+      im("s19.jpg", 142, 146, 1227, 690),
+    ]},
+
+    { name: "20", items: [
+      im("s20.jpg", 142, 146, 1227, 690),
+    ]},
+
+    { name: "21", items: [
+      im("s21.jpg", 142, 146, 1227, 690),
+    ]},
+
     { name: "הצעה 02", items: [
       text(37, 842, 1439, 35, ["הצעה 02", "מערכת המתבססת על הרעיון התמתי של מסיכה. יצירה של מערכת מסכות בצורה שמשלבת קראפט ומערכת גנרטיבית."]),
     ]},
-    { name: "מערכת מסכות", items: [
-      ph(320, 137, 922.514, 616.96, "מערכת מסכות"),
-      text(89, 842, 1387, 35, "טקסט על מערכת מסכות"),
+
+    { name: "23", items: [
+      vid("assets/video-23.mp4", 85, 125, 1342, 733),
     ]},
-    { name: "תא צילום", items: [
-      ph(320, 137, 922.514, 616.96, "פוטובות׳"),
-      text(89, 842, 1387, 35, "טקסט על תא צילום"),
+
+    { name: "24", items: [
+      im("s24.jpg", 458, 118, 595, 746),
     ]},
-    { name: "מסכות", items: [
-      ph(320, 137, 922.514, 616.96, "מסכות"),
-      text(89, 842, 1387, 35, "טקסט על מסכות"),
+
+    { name: "25", items: [
+      im("s25.jpg", 458, 118, 595, 746),
     ]},
-    { name: "הזמנה לכנס", items: [
-      ph(534, 137, 495, 616.96, "הזמנה לכנס", 96),
-      text(89, 842, 1387, 35, "הזמנה לכנס"),
+
+    { name: "26", items: [
+      im("gif-26.gif", 156, 91, 1200, 800),
     ]},
-    { name: "עיצוב מסך", items: [
-      ph(245, 137, 1073, 616.96, "עיצוב מסך"),
-      text(89, 842, 1387, 35, "עיצוב מסך"),
+
+    { name: "27", items: [
+      im("gif-27.gif", 156, 91, 1200, 800),
     ]},
+
+    { name: "28", items: [
+      im("gif-28.gif", 156, 91, 1200, 800),
+    ]},
+
+    { name: "29", items: [
+      im("s29.jpg", 525, 190, 462, 602),
+    ]},
+
+    { name: "30", items: [
+      im("s30.jpg", 525, 190, 462, 602),
+    ]},
+
+    { name: "31", items: [
+      im("s31.jpg", 525, 190, 462, 602),
+    ]},
+
+    { name: "32", items: [
+      im("s32a.jpg", 471, 120, 568, 740),
+      im("s32b.jpg", 523, 172, 464, 373),
+    ]},
+
+    { name: "33", items: [
+      im("s33d.jpg", 43, 299, 307, 400),
+      im("s33a.jpg", 375, 298, 319, 400),
+      im("s33b.jpg", 813, 299, 320, 400),
+      im("s33c.jpg", 1156, 299, 320, 400),
+    ]},
+
     { name: "תהיות", items: [
-      text(37, 662, 1439, 95, ["1) נוכחות גבוהה של סטודנטים.ות בכנס", "2) עבודה עם תקציב מוגבל", "3) נוכחות אמנים ויוצרים מחוץ לבצלאל"], "hot tight"),
+      text(37, 662, 1439, 95, ["1) נוכחות גבוהה של סטודנטים.ות בכנס", "2) עבודה עם תקציב מוגבל"], "hot tight"),
     ]},
     { name: "מה גורם", items: [
       text(37, 852, 1439, 95, "מה גורם לסטודנטים.ות להגיע לאירוע?", "hot"),
@@ -283,7 +395,7 @@
       img("assets/fmt-46-c.jpg", 384, 226, 344, 442, "fill"),
       img("assets/fmt-47-c.jpg", 781, 226, 310, 442, "fill"),
       img("assets/fmt-48-c.jpg", 1144, 226, 332, 442, "fill"),
-      text(37, 842, 1439, 35, "אחד הדברים שגורמים לנו להגיע לאירועים הוא כמובן פרגון לחברים.ות שמציגים בתערוכה. בנוסף הקול והנוכחות של סטודנטים.ות חשוב בכנס מסוג זה. אפשר לשלב את שני הרעיונות האלה בפרויקט מיוחד בו נאסוף שלושה-ארבעה סטודנטים.ות שיצרו פורמט ״בזק״ בנושא דמיון ויציגו בכנס בעמדה סטטית."),
+      text(37, 842, 1439, 35, "אחד הדברים שגורמים לנו להגיע לאירועים הוא פרגון לחברים.ות שמציגים באירוע. בנוסף הקול והנוכחות של סטודנטים.ות חשוב בכנס מסוג זה. אפשר לשלב את שני הרעיונות האלה בפרויקט מיוחד בו נאסוף שלושה-ארבעה סטודנטים.ות שיצרו פורמט ״בזק״ בנושא דמיון ויציגו בכנס בעמדה סטטית."),
     ]},
     { name: "עבודה עם תקציב מוגבל", items: [
       text(37, 852, 1439, 95, "עבודה עם תקציב מוגבל", "hot"),
@@ -296,15 +408,11 @@
       text(37, 842, 1439, 35, BODY),
     ]},
     { name: "שאריות עץ", items: [
-      img("assets/wood-offcut.png", 790, 283, 621, 355, "contain"),
-      img("assets/wood-offcut.png", 118, 283, 621, 355, "contain"),
+      rimg("assets/s43a.png", 756, 150, 355, 621),
+      im("s43b.jpg", 482, 118, 287, 653),
       text(37, 842, 1439, 35, BODY),
     ]},
-    { name: "לוגו בתנועה", items: [
-      img("assets/wood-motion-c.jpg", 772, 113, 301, 684, "fill"),
-      img("assets/wood-motion-c.jpg", 439, 113, 301, 684, "fill"),
-      text(37, 842, 1439, 35, BODY),
-    ]},
+
     { name: "רפרנסים — פורמטי חלל", items: [
       text(727, 852, 749, 95, "פורמטי חלל"),
       text(43, 852, 600, 95, "רפרנסים", "left"),
@@ -322,15 +430,6 @@
     { name: "מהפך בכנס", items: [
       text(916, 852, 560, 95, "מהפך בכנס"),
       text(43, 852, 600, 95, "הצעה", "left"),
-    ]},
-    { name: "מהלך שינוי", items: [
-      text(37, 897, 1439, 35, "מהלך של שינוי העיצוב או האווירה הכללית של הכנס - המהלך יראה אחרת לפי הכיוון שיבחר."),
-    ]},
-    { name: "מהלך שינוי 01", items: [
-      text(37, 897, 1439, 35, "מהלך שינוי 01"),
-    ]},
-    { name: "מהלך שינוי 02", items: [
-      text(37, 897, 1439, 35, "מהלך שינוי 02"),
     ]},
   ].filter(s => !s.hidden);
 
@@ -456,6 +555,20 @@
       frag.append(m, t);
       return frag;
     }
+    if (it.k === "vid") {
+      const v = document.createElement("video");
+      v.src = it.src; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "metadata"; v.setAttribute("muted", "");
+      v.style.objectFit = "cover";
+      return mask(v, it.x, it.y, it.w, it.h);
+    }
+    if (it.k === "rimg") {   // image turned 90deg inside its box
+      const box = document.createElement("div"); box.className = "icn rot";
+      box.style.cssText = `left:50%;top:50%;width:${px(it.h)};height:${px(it.w)};transform:translate(-50%,-50%) rotate(-90deg)`;
+      const i = document.createElement("img"); i.src = it.src; i.alt = "";
+      Object.assign(i.style, { inset: "0", width: "100%", height: "100%", objectFit: "contain" });
+      box.append(i);
+      return mask(box, it.x, it.y, it.w, it.h);
+    }
     if (it.k === "icon") {
       const box = document.createElement("div"); box.className = "icn";
       const mk = (src, cls, sx, sy) => {
@@ -579,6 +692,7 @@
     }
     cur = n;
     slideEls[cur].classList.add("on");
+    slideEls.forEach((el, i) => el.querySelectorAll("video").forEach(v => { if (i === cur) v.play().catch(() => {}); else setTimeout(() => { if (cur !== i) v.pause(); }, 500); }));
     prevBtn.hidden = cur === 0;                 // no "previous" on the first slide
     nextBtn.hidden = cur === SLIDES.length - 1; // no "next" on the last one
     countEl.textContent = (cur + 1) + " / " + SLIDES.length;
