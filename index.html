@@ -48,7 +48,7 @@
   .m { overflow: hidden; }
   .m-in { width: 100%; height: 100%; translate: 0 102%; }
   .m-in { position: relative; }
-  .m-in > img, .m-in > .ph { display: block; width: 100%; height: 100%; }
+  .m-in > img, .m-in > .ph, .m-in > video { display: block; width: 100%; height: 100%; }
   .m-in > img.crop { position: absolute; }
   .slide.on .line-in,
   .slide.on .m-in {
@@ -193,15 +193,15 @@
       { k: "wall" },
     ]},
     { name: "מתחילים", items: [
-      im("s02a.jpg", 264, 568, 985, 291),
-      im("s02b.jpg", 64, 168, 627, 387),
-      im("s02c.jpg", 597, 136, 895, 451),
+      im("s02a.png", 264, 568, 985, 291),
+      im("s02b.png", 64, 168, 627, 387),
+      im("s02c.png", 597, 136, 895, 451),
     ]},
 
     { name: "הצעה 01", center: true, items: [
       text(37, 842, 1439, 35, ["הצעה 01", "מערכת המתבססת על אייקונים."]),
-      im("s03a.jpg", 68, 210, 671, 491),
-      im("s03b.jpg", 707, 228, 738, 455),
+      im("s03a.png", 68, 210, 671, 491),
+      im("s03b.png", 707, 228, 738, 455),
     ]},
 
     { name: "אייקונים", center: true, items: [
@@ -222,21 +222,21 @@
     ]},
 
     { name: "06", items: [
-      im("s06a.jpg", 324.5, 329, 840, 257),
-      im("s06b.jpg", 919, 160, 441, 298),
-      im("s06c.jpg", 152, 482.5, 528, 339),
+      im("s06a.png", 324.5, 329, 840, 257),
+      im("s06b.png", 919, 160, 441, 298),
+      im("s06c.png", 152, 482.5, 528, 339),
     ]},
 
     { name: "07", items: [
-      im("s07a.jpg", 462.5, 436, 840, 257),
-      im("s07b.jpg", 210, 416, 441, 298),
-      im("s07c.jpg", 416, 226, 528, 339),
+      im("s07a.png", 462.5, 436, 840, 257),
+      im("s07b.png", 210, 416, 441, 298),
+      im("s07c.png", 416, 226, 528, 339),
     ]},
 
     { name: "08", items: [
-      im("s08a.jpg", 348.5, 447, 840, 257),
-      im("s08b.jpg", 937, 278, 441, 298),
-      im("s08c.jpg", 133, 277, 528, 339),
+      im("s08a.png", 348.5, 447, 840, 257),
+      im("s08b.png", 937, 278, 441, 298),
+      im("s08c.png", 133, 277, 528, 339),
     ]},
 
     { name: "09", items: [
@@ -558,7 +558,7 @@
     if (it.k === "vid") {
       const v = document.createElement("video");
       v.src = it.src; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "metadata"; v.setAttribute("muted", "");
-      v.style.objectFit = "cover";
+      v.style.objectFit = "contain";
       return mask(v, it.x, it.y, it.w, it.h);
     }
     if (it.k === "rimg") {   // image turned 90deg inside its box
