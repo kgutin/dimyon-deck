@@ -729,7 +729,7 @@
   // Wait for the fonts so lines are measured with the real typeface, then show the first slide.
   Promise.all(['400 100px "Simpler Pro"', '600 100px "Simpler Pro"', '700 25px "Simpler Pro"'].map(f => document.fonts.load(f)))
     .catch(() => {})
-    .then(() => { relayout(); go(fromHash()); });
+    .then(() => { relayout(); go(0);   // everyone starts at the first slide, whatever the link says });
 
   // Decode every image up front, so a picture is never still loading when its slide rises.
   document.querySelectorAll(".slide img").forEach(i => { i.decoding = "async"; i.loading = "eager"; i.decode?.().catch(() => {}); });
